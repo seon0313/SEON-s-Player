@@ -22,9 +22,10 @@ class App:
         self.img = {}
         self.instance = vlc.Instance()
         self.player = self.instance.media_player_new()
-        self.media = self.instance.media_new(self.mainMusic.getAudioURL())
+        self.media = self.instance.media_new('https://www.youtube.com/watch?v='+self.mainMusic.video.videoid)
         self.media.get_mrl()
         self.player.set_media(self.media)
+        self.player.play()
         #self.player.play()
         for i in glob.glob('./module/i/*.svg'):
             name = os.path.basename(i).lower().split('.')[0]
@@ -49,6 +50,7 @@ class App:
         lyric.lyric_render()
         inner = Grid([album,lyric])
         inner.percent = 40
+        self.player.play()
         g = Grid([
             inner,
             Control_Bar(self.img)
@@ -67,7 +69,7 @@ class App:
                     break
             if not run_: break
 
-            #print(self.media.get_time())
+            print(self.player.get_time())
 
             self.sc.fill((255,255,255))
 
@@ -84,5 +86,4 @@ if __name__ == '__main__':
     pygame.init()
     a = App()
     a.run()
-    a.media.stop()
     pygame.quit()
