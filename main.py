@@ -6,7 +6,7 @@ from module.ui.album import Album
 from module.ui.lyric import Lyric
 from module.ui.control_bar import Control_Bar
 from module.ui.background import Background
-
+from module.ui.easing import Easing
 from module.api.music import Music
 import glob
 import os
@@ -18,14 +18,14 @@ class App:
         self.clock = pygame.time.Clock()
         self.fps = 60
         pygame.display.set_caption(self.title)
-        self.mainMusic: Music = Music('8yXGI3kcLsw')
+        self.mainMusic: Music = Music('pbELDkeLdho')
         self.img = {}
         self.instance = vlc.Instance()
         self.player = self.instance.media_player_new()
         self.media = self.instance.media_new(self.mainMusic.getAudioURL())
         self.media.get_mrl()
         self.player.set_media(self.media)
-        #self.player.play()
+        self.player.play()
         for i in glob.glob('./module/i/*.svg'):
             name = os.path.basename(i).lower().split('.')[0]
             print(i)
@@ -46,7 +46,9 @@ class App:
         album.setImage(self.mainMusic.getNailsImage())
         lyric = Lyric(pygame.font.Font('./module/f/font.ttf',40))
         lyric.lyric = self.mainMusic.getLyrics()
+        lyric.ani = Easing.ease_in_out_expo
         lyric.lyric_render()
+        lyric.reset()
         inner = Grid([album,lyric])
         inner.percent = 40
         g = Grid([
@@ -66,8 +68,8 @@ class App:
                     run_ = False
                     break
             if not run_: break
-
-            #print(self.media.get_time())
+            n, le = self.player.get_time(),self.player.get_length()
+            lyric.time = n/1000
 
             self.sc.fill((255,255,255))
 
@@ -84,5 +86,4 @@ if __name__ == '__main__':
     pygame.init()
     a = App()
     a.run()
-    a.media.stop()
     pygame.quit()
