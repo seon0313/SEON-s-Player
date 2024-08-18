@@ -22,10 +22,11 @@ class App:
         self.img = {}
         self.instance = vlc.Instance()
         self.player = self.instance.media_player_new()
-        self.media = self.instance.media_new(self.mainMusic.getAudioURL())
+        self.media = self.instance.media_new('https://www.youtube.com/watch?v='+self.mainMusic.video.videoid)
         self.media.get_mrl()
         self.player.set_media(self.media)
         self.player.play()
+
         for i in glob.glob('./module/i/*.svg'):
             name = os.path.basename(i).lower().split('.')[0]
             print(i)
@@ -51,6 +52,7 @@ class App:
         lyric.reset()
         inner = Grid([album,lyric])
         inner.percent = 40
+        self.player.play()
         g = Grid([
             inner,
             Control_Bar(self.img)
@@ -68,6 +70,7 @@ class App:
                     run_ = False
                     break
             if not run_: break
+
             n, le = self.player.get_time(),self.player.get_length()
             lyric.time = n/1000
 
