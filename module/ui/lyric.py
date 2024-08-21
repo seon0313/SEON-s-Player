@@ -17,6 +17,7 @@ class Lyric:
         self.ani = None
         self.heights: list[int] = []
         self.now: int = 0
+        self.size_p: int = 0
         self.old_size:tuple = (0,0)
     def reset(self):
         self.heights = [0 for i in range(len(self.lyric.items()))]
@@ -35,14 +36,16 @@ class Lyric:
     def run(self, sf: pygame.Surface) -> pygame.Surface:
         sf.fill(pygame.Color(255,0,255,120))
         size = sf.get_size()
-        if self.items != [] and self.lyric != None:
-            app = 0
+        if self.items != [] and self.lyric is not None and not len(self.lyric) <= 0 and len(self.heights) > 0:
+            if self.size_p <= 0 or self.old_size != size:
+                self.size_p = size[1]/2
+            app = 0#self.size_p
             for i in self.heights[:self.now]: app-=i
             render = True
-            size_p = size[1]/2
             for index, _i in enumerate(self.items):
                 x_ = self.border
-                _h = 0
+                _h = 1
+                breaked = False
                 for index2, i in enumerate(_i):
                     s:pygame.Surface = i['sf']
                     s.set_alpha(180)
@@ -64,26 +67,30 @@ class Lyric:
                         s.set_alpha(255 - (255 - 180) * v)
                     w,h = s.get_size()
                     h = self.h
-                    if index2 == 0: _h = h+(h/2)+h
                     if x_+w>size[0]-self.margin:
                         app += h+5
-                        _h += h+5
+                        _h += 1
                         x_ = self.border
 
                     if self.time >= i['end']:
                         if x_ == self.border and index2 >= len(_i)-1:
                             #if not self.now > index: self.now = index + 1
                             pass
-                    print(self.now)
 
-                    hv = (index*h)+(index*(h+(h/2)))+app+size_p
-                    if hv < 0: break
+                    hv = (index*h)+(index*(h+(h/2)))+app
+                    if hv < 0 and False:
+                        breaked = True
+                        break
                     if hv>size[1]:
                         render = False
                         break
                     sf.blit(s,(x_,hv))
                     x_ += w+self.space[0]
-                if self.heights[index] == 0 or self.old_size != size:self.heights[index] = _h
+                if index ==0:
+                    print(_h)
+                if self.old_size != size or self.heights[index] <= 0:
+                    print('Update!')
+                    self.heights[index] = _h*(h+5) + h+(h/2) -5
                 if not render: break
         self.old_size = size
         return sf

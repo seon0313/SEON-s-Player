@@ -9,6 +9,7 @@ class Album:
         self.img = None
         self.padding = 35
         #self.color = (r(0,256),200,r(0,256)
+        self.start = 0
 
 
     def setImage(self, image):
@@ -18,7 +19,6 @@ class Album:
         self.img = pygame.transform.chop(self.img, pygame.Rect(0, 0, side, 0))
         size = self.img.get_size()
         self.img = pygame.transform.chop(self.img, pygame.Rect(size[0] - side, 0, side, 0))
-        self.start = 0
 
     def run(self, sf: pygame.Surface) -> pygame.Surface:
         if self.img != None:

@@ -70,7 +70,6 @@ class Music:
 
     def getLyrics(self, lang='ko'):
         data = syncedlyrics.search(f'{self.video.title} {self.video.author}', enhanced=True)
-        print(data)
         if data == None or data == '' or len(data) <= 0:
             data = YouTubeTranscriptApi.get_transcript(self.video.videoid, languages=['ko'])
             lyric = {}
