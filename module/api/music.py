@@ -7,7 +7,6 @@ from youtube_transcript_api import YouTubeTranscriptApi
 class Music:
     def __init__(self, code):
         self.video = pafy.new(self.codeto(code), ydl_opts={'nocheckcertificate': True})
-        pafy.set_api_key('AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30')
         self.ydl_opt = {
             'format': 'bestaudio',
             'subtitlesformat': 'srt',
@@ -18,11 +17,11 @@ class Music:
         return code
 
     def getAudioURL(self):
-        b = pafy.new(self.video.videoid, ydl_opts={'nocheckcertificate': True})
+        #b = pafy.new(self.video.videoid, ydl_opts={'nocheckcertificate': True})
         audio_url = ''
         with yt_dlp.YoutubeDL(self.ydl_opt) as v:
             #print(v.list_subtitles(b.videoid,['ko']))
-            info = v.extract_info(b.watchv_url, download=False)
+            info = v.extract_info(self.video.watchv_url, download=False)
             v.close()
         formats = info['formats']
         minus = 0
@@ -71,15 +70,29 @@ class Music:
     def getLyrics(self, lang='ko'):
         data = syncedlyrics.search(f'{self.video.title} {self.video.author}', enhanced=True)
         if data == None or data == '' or len(data) <= 0:
-            data = YouTubeTranscriptApi.get_transcript(self.video.videoid, languages=['ko'])
+            data = YouTubeTranscriptApi.get_transcript(self.video.videoid, languages=['ko']) # JP -> ja
+            len_data = len(data)
             lyric = {}
+            start = -1
             for index, i in enumerate(data):
                 if lyric.get(index - 1) is None: lyric[index - 1] = []
-                for d in i['text'].split(' '):
-                    if len(d) <= 0: d = '33'
-                    lyric[index - 1].append({'start': i['start'], 'end': i['start'] + i['duration'], 'msg': d})
+                if index+1 < len_data and data[index+1]['text'] == i['text']:
+                    if start <0: start = i['start']
+                    continue
+                start = i['start'] if start < 0 else start
+                msg = i['text'].replace(' ','').replace('​','')
+                for d in msg.split(' '):
+                    if len(d) <= 0: continue
+                    lyric[index - 1].append({'start': start, 'end': i['start'] + i['duration'], 'msg': d})
+                start = -1
+            lyric_ = {}
+            for index, i in enumerate(lyric.values()):
+                if len(i) > 0:
+                    lyric_[index-1] = i
+            lyric = lyric_
         else:
             data = data.replace('[', '').replace(']', '').split('\n')
+            print(data)
             lyric = {}
             ly = ''
             old_t = 0
@@ -108,6 +121,7 @@ class Music:
                         ly += i
                         if not sync:
                             if lyric.get(index) is None: lyric[index] = []
+
                             lyric[index].append({'start': old_t, 'end': self.strToTime(d[0]), 'msg': ly})
                             ly = ''
 

@@ -27,7 +27,7 @@ class App:
         self.player = self.instance.media_player_new()
         self.media = None
 
-        self.lyric: Lyric = Lyric(pygame.font.Font('./module/f/font.ttf', 40))
+        self.lyric: Lyric = Lyric(pygame.font.Font('./module/f/SEON-font.ttf', 40))
         self.lyric.ani = Easing.ease_in_out_expo
         self.album: Album = Album()
         threading.Thread(target=self.mainmusic_load, args=('SKztjYndS_s',)).start()
