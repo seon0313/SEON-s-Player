@@ -91,7 +91,7 @@ class Music:
                     lyric_[index-1] = i
             lyric = lyric_
         else:
-            data = data.replace('[', '').replace(']', '').split('\n')
+            data = data.replace('[', '').replace('] ', ']').replace(']','] ').replace(']', '').split('\n')
             print(data)
             lyric = {}
             ly = ''

@@ -59,7 +59,7 @@ class Lyric:
                 if self.app_t <= 0: self.app_t, self.app_s = (time.time(), self.app)
                 v = (time.time() - self.app_t) / 1.0
                 v = self.ani(v if v < 1 else 1)
-                self.app = self.app_s+(((max(self.app_s,target_app)-min(self.app_s,target_app))*v) * 1 if target_app > self.app_s else -1)
+                self.app = self.app_s+((target_app-self.app_s)*v)
                 print(v)
                 if v >= 1:
                     self.app = target_app
