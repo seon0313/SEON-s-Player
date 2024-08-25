@@ -8,9 +8,9 @@ from module.ui.control_bar import Control_Bar
 from module.ui.background import Background
 from module.ui.easing import Easing
 from module.api.music import Music
+from module.api.vlc import VLC
 import glob
 import os
-import vlc
 import threading
 
 
@@ -23,14 +23,12 @@ class App:
         pygame.display.set_caption(self.title)
         self.mainMusic: Music = None
         self.img = {}
-        self.instance = vlc.Instance()
-        self.player = self.instance.media_player_new()
-        self.media = None
+        self.vlc = VLC()
 
         self.lyric: Lyric = Lyric(pygame.font.Font('./module/f/SEON-font.ttf', 40))
         self.lyric.ani = Easing.ease_in_out_expo
         self.album: Album = Album()
-        threading.Thread(target=self.mainmusic_load, args=('SKztjYndS_s',)).start()
+        threading.Thread(target=self.mainmusic_load, args=('CyOAmEihVHs',)).start()
         for i in glob.glob('./module/i/*.svg'):
             name = os.path.basename(i).lower().split('.')[0]
             a = pygame.image.load(i)
@@ -54,10 +52,8 @@ class App:
     def album_img_load(self):
         self.album.setImage(self.mainMusic.getNailsBest())
     def music_load(self):
-        self.media = self.instance.media_new(self.mainMusic.getAudioURL())
-        self.media.get_mrl()
-        self.player.set_media(self.media)
-        self.player.play()
+        self.vlc.setMidea(self.mainMusic.getAudioURL())
+        self.vlc.play()
 
     def music_load_end(self):
         threading.Thread(target=self.lyric_load).start()
@@ -71,7 +67,7 @@ class App:
         inner.percent = 40
         g = Grid([
             inner,
-            Control_Bar(self.img)
+            Control_Bar(self.img, self.vlc, self.lyric)
         ], align=1)
         g.percent = 90
         g.max_ = 90
@@ -86,12 +82,13 @@ class App:
                     run_ = False
                     break
             if not run_: break
-            n, le = self.player.get_time(), self.player.get_length()
-            self.lyric.time = n / 1000
+            self.lyric.time = self.vlc.getTime()
 
             self.sc.fill((255, 255, 255))
 
             self.sc.blit(background.run(pygame.Surface(self.sc.get_size(), pygame.SRCALPHA)), (0, 0))
+            x,y = pygame.mouse.get_pos()
+            g.setMp(x,y)
             ct = g.run(pygame.Surface(self.sc.get_size(), pygame.SRCALPHA))
             self.sc.blit(ct, (0, 0))
             
@@ -103,4 +100,5 @@ if __name__ == '__main__':
     pygame.init()
     a = App()
     a.run()
+    a.vlc.stop()
     pygame.quit()

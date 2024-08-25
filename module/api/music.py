@@ -70,7 +70,7 @@ class Music:
     def getLyrics(self, lang='ko'):
         data = syncedlyrics.search(f'{self.video.title} {self.video.author}', enhanced=True)
         if data == None or data == '' or len(data) <= 0:
-            data = YouTubeTranscriptApi.get_transcript(self.video.videoid, languages=['ko']) # JP -> ja
+            data = YouTubeTranscriptApi.get_transcript(self.video.videoid, languages=['ja']) # JP -> ja
             len_data = len(data)
             lyric = {}
             start = -1
@@ -95,11 +95,10 @@ class Music:
             print(data)
             lyric = {}
             ly = ''
-            old_t = 0
             start = -1
             sync = True
             for index, i in enumerate(data):
-                if not '<' in i: sync, start = (False,old_t)
+                if not '<' in i: sync = False
                 d = i.split(' ')
                 if index > 0:
                     if lyric.get(index - 1) is None: lyric[index - 1] = []
@@ -122,10 +121,20 @@ class Music:
                         if not sync:
                             if lyric.get(index) is None: lyric[index] = []
 
-                            lyric[index].append({'start': old_t, 'end': self.strToTime(d[0]), 'msg': ly})
+                            lyric[index].append({'start': self.strToTime(d[0]), 'end': 0, 'msg': ly})
                             ly = ''
-
-                old_t = self.strToTime(d[0])
+            print(lyric)
+            if not sync:
+                end = len(lyric)-1
+                for i in lyric:
+                    for index, l in enumerate(lyric[i]):
+                        if not i >= end:
+                            print(i)
+                            l['end'] = lyric[i+1][0]['start']
+                            lyric[i][index] = l
+                        else:
+                            l['end'] = -1
+                            lyric[i][index] = l
         return lyric
 
 
