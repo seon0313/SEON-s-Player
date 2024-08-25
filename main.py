@@ -28,7 +28,7 @@ class App:
         self.lyric: Lyric = Lyric(pygame.font.Font('./module/f/SEON-font.ttf', 40))
         self.lyric.ani = Easing.ease_in_out_expo
         self.album: Album = Album()
-        threading.Thread(target=self.mainmusic_load, args=('CyOAmEihVHs',)).start()
+        threading.Thread(target=self.mainmusic_load, args=('iA-NcVlqLRs',)).start()
         for i in glob.glob('./module/i/*.svg'):
             name = os.path.basename(i).lower().split('.')[0]
             a = pygame.image.load(i)
