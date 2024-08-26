@@ -14,6 +14,9 @@ class VLC:
     def play(self):
         self.player.play()
 
+    def pause(self):
+        self.player.pause()
+
     def getTime(self) -> float:
         return self.player.get_time() / 1000
 
@@ -30,7 +33,10 @@ class VLC:
         return self.player.get_volume()
 
     def getState(self) -> int:
-        return self.player.get_state()
+        state = self.player.get_state()
+        if state == vlc.State.Playing: return 1
+        elif state == vlc.State.Paused: return 0
+        else: return -1
 
     def getPosition(self) -> float:
         return self.player.get_position()
@@ -45,7 +51,6 @@ class VLC:
         return (self.getLength()*val)/1000
 
 class VLC_Type:
-    def __init__(self):
-        self.playing = 1
-        self.paused = 0
-        self.other = -1
+    playing = 1
+    paused = 0
+    other = -1

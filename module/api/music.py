@@ -11,32 +11,35 @@ class Music:
             'format': 'bestaudio',
             'subtitlesformat': 'srt',
         }
+        self.audioUrl = None
 
     def codeto(self, code):
         if not 'http' in code: code = 'https://www.youtube.com/watch?v=' + code
         return code
 
     def getAudioURL(self):
-        #b = pafy.new(self.video.videoid, ydl_opts={'nocheckcertificate': True})
-        audio_url = ''
-        with yt_dlp.YoutubeDL(self.ydl_opt) as v:
-            #print(v.list_subtitles(b.videoid,['ko']))
-            info = v.extract_info(self.video.watchv_url, download=False)
-            v.close()
-        formats = info['formats']
-        minus = 0
-        urls = []
-        for index, i in enumerate(formats):
-            if i.get('acodec') in ['none', None] or not i.get('vcodec') in ['none', None]:
-                minus += 1
-                continue
-            url = i['url']
-            format = i['format']
-            audio = i['audio_ext']
-            if index == 0: print(i)
-            #print(f'{index+1-minus}st {format} {audio} {url}')
-            urls.append({'format': audio, 'type': format, 'url': url})
-        return urls[-1]['url']
+        if self.audioUrl == None:
+            #b = pafy.new(self.video.videoid, ydl_opts={'nocheckcertificate': True})
+            audio_url = ''
+            with yt_dlp.YoutubeDL(self.ydl_opt) as v:
+                #print(v.list_subtitles(b.videoid,['ko']))
+                info = v.extract_info(self.video.watchv_url, download=False)
+                v.close()
+            formats = info['formats']
+            minus = 0
+            urls = []
+            for index, i in enumerate(formats):
+                if i.get('acodec') in ['none', None] or not i.get('vcodec') in ['none', None]:
+                    minus += 1
+                    continue
+                url = i['url']
+                format = i['format']
+                audio = i['audio_ext']
+                if index == 0: print(i)
+                #print(f'{index+1-minus}st {format} {audio} {url}')
+                urls.append({'format': audio, 'type': format, 'url': url})
+            self.audioUrl = urls[-1]['url']
+        return self.audioUrl
 
     def getTitle(self):
         return self.video.title

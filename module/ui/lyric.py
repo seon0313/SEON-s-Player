@@ -28,6 +28,7 @@ class Lyric:
     def reset(self):
         self.heights = [0 for i in range(len(self.lyric.items()))]
         self.app = 0
+        self.now = 0
 
     def lyric_render(self):
         if self.lyric == None or self.lyric == '' or len(self.lyric) <= 0: return
@@ -47,19 +48,21 @@ class Lyric:
                     )
 
     def getLyric(self, t: float) -> tuple:
-        if self.items != [] and len(self.items) > 0:
-            for i in tuple(self.items):
-                if i[0]['start'] <= t <= i[-1]['end']:
-                    le = len(i)-1
-                    ly = ''
-                    start = 0
-                    end = 0
-                    for index, l in enumerate(i):
-                        ly += l['msg']
-                        if index == 0: start = l['start']
-                        elif index >= le: end = l['end']
+        try:
+            if self.items != [] and len(self.items) > 0:
+                for i in tuple(self.items):
+                    if i[0]['start'] <= t <= i[-1]['end']:
+                        le = len(i)-1
+                        ly = ''
+                        start = 0
+                        end = 0
+                        for index, l in enumerate(i):
+                            ly += l['msg']
+                            if index == 0: start = l['start']
+                            if index >= le: end = l['end']
 
-                    return ly, start, end
+                        return ly, start, end
+        except Exception as e: print('getLyric',e)
 
     def resetNow(self, t):
         if self.items != [] and len(self.items) > 0:
@@ -73,7 +76,6 @@ class Lyric:
                 if now_[1] < 0 or now_[1] > max(i[0]['start'], t) - min(i[0]['start'], t):
                     now_[0], now_[1] = (index, max(i[0]['start'], t) - min(i[0]['start'], t))
             if not place:
-                print(now_)
                 self.now = now_[0]
             self.reset_now = True
 

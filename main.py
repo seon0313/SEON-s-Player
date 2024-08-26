@@ -24,8 +24,9 @@ class App:
         self.mainMusic: Music = None
         self.img = {}
         self.vlc = VLC()
-
         self.lyric: Lyric = Lyric(pygame.font.Font('./module/f/SEON-font.ttf', 40))
+        self.controlBar: Control_Bar = Control_Bar(self.img, self.vlc, self.lyric,
+                                                   pygame.font.Font('./module/f/SEON-font.ttf', 25), self.mainMusic, self.mainmusic_load_thread)
         self.lyric.ani = Easing.ease_in_out_expo
         self.album: Album = Album()
         threading.Thread(target=self.mainmusic_load, args=('iA-NcVlqLRs',)).start()
@@ -39,13 +40,17 @@ class App:
                     if alpha != 0:
                         a.set_at((x, y), pygame.Color(0, 0, 0, alpha))
             self.img[name] = a
+        print(self.img)
 
+    def mainmusic_load_thread(self, code:str):
+        threading.Thread(target=self.mainmusic_load, args=(code,)).start()
     def lyric_load(self):
         self.lyric.lyric = self.mainMusic.getLyrics()
         self.lyric.lyric_render()
         self.lyric.reset()
 
     def mainmusic_load(self, code: str):
+        self.controlBar.loaded = True
         self.mainMusic = Music(code)
         self.music_load_end()
 
@@ -53,6 +58,8 @@ class App:
         self.album.setImage(self.mainMusic.getNailsBest())
     def music_load(self):
         self.vlc.setMidea(self.mainMusic.getAudioURL())
+        self.controlBar.mainMusic = self.mainMusic
+        self.controlBar.loaded = False
         self.vlc.play()
 
     def music_load_end(self):
@@ -67,7 +74,7 @@ class App:
         inner.percent = 40
         g = Grid([
             inner,
-            Control_Bar(self.img, self.vlc, self.lyric)
+            self.controlBar
         ], align=1)
         g.percent = 90
         g.max_ = 90
@@ -76,7 +83,6 @@ class App:
 
         run_ = True
         while run_:
-            t = time.time()
             for i in pygame.event.get():
                 if i.type == pygame.QUIT:
                     run_ = False
@@ -91,7 +97,6 @@ class App:
             g.setMp(x,y)
             ct = g.run(pygame.Surface(self.sc.get_size(), pygame.SRCALPHA))
             self.sc.blit(ct, (0, 0))
-            
             pygame.display.flip()
             self.clock.tick(self.fps)
 
