@@ -17,6 +17,11 @@ class VLC:
     def pause(self):
         self.player.pause()
 
+    def toggle(self):
+        v = self.getState()
+        if v == 1: self.pause()
+        elif v == 0: self.play()
+
     def getTime(self) -> float:
         return self.player.get_time() / 1000
 

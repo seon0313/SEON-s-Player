@@ -20,14 +20,18 @@ class Lyric:
         self.size_p: int = 0
         self.old_size:tuple = (0,0)
         self.reload = False
-        self.app = 0
-        self.app_t = 0
-        self.app_s = 0
+        self.app = 0 # lyric top margin
+        self.app_t = 0 # music playing time
+        self.app_s = 0 # start-time
         self.mp = (0,0)
         self.reset_now = False
+        self.loaded = False
+        self.isreset = False
     def reset(self):
         self.heights = [0 for i in range(len(self.lyric.items()))]
         self.app = 0
+        self.app_t = 0
+        self.app_s = 0
         self.now = 0
 
     def lyric_render(self):
@@ -57,11 +61,11 @@ class Lyric:
                         start = 0
                         end = 0
                         for index, l in enumerate(i):
-                            ly += l['msg']
+                            ly += l['msg']+' '
                             if index == 0: start = l['start']
                             if index >= le: end = l['end']
 
-                        return ly, start, end
+                        return ly[:-1], start, end
         except Exception as e: print('getLyric',e)
 
     def resetNow(self, t):
@@ -136,11 +140,6 @@ class Lyric:
                         _h += 1
                         x_ = self.border
 
-                    if self.time >= i['end']:
-                        if x_ == self.border and index2 >= len(_i)-1:
-                            #if not self.now > index: self.now = index + 1
-                            pass
-
                     hv = (index*h)+(index*(h+(h/2)))+app-self.app
                     if hv < 0 and False:
                         breaked = True
@@ -150,6 +149,9 @@ class Lyric:
                         break
                     sf.blit(s,(x_,hv+self.size_p))
                     x_ += w+self.space[0]
+                try: self.heights[index]+=0
+                except:
+                    for i in range(len(self.heights)-1-index): self.heights.append(0)
                 if self.old_size != size or self.heights[index] <= 0 or (not reload and self.reload):
                     self.heights[index] = _h*(h+5) + h+(h/2) -5
                     if (index >= len(self.items)-1 and index2 >= len(_i)) or not render:
