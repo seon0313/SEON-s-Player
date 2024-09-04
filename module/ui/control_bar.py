@@ -7,22 +7,23 @@ from module.ui.lyric import Lyric
 from module.api.music import Music
 from module.api.playlist import Playlist
 class Control_Bar:
-    def __init__(self, img:dict, vlc: VLC,lyric: Lyric, font:pygame.font.Font, mainMusic: Music,load_func, mainPlaylist, color = pygame.Color(255,255,255)):
+    def __init__(self,l, img:dict, font:pygame.font.Font, load_func, musicLoadEnd=None, color = pygame.Color(255,255,255)):
+        #locals(), self.img, pygame.font.Font('./module/f/SEON-font.ttf', 25), self.mainmusic_load_thread, threading.Thread(target=self.music_load_end)
         pygame.scrap.init()
         pygame.scrap.set_mode(pygame.SCRAP_CLIPBOARD)
         self.color = color
         self._img:dict = img
-        self.vlc = vlc
+        self.vlc = l.vlc
         self.old = 0
-        self.lyric = lyric
+        self.lyric = l.lyric
         self.mp = (0,0)
+        self._app = l
         self.start = 0
         self._l = None
         self.play_bar_height = -1
         self.old_h = 0
         self.font: pygame.Font = font
-        self.mainMusic: Music = mainMusic
-        self._mainPlaylist: mainPlaylist = mainPlaylist
+        self._musicLoadEnd = musicLoadEnd
         self.loaded = False
         self.old_loaded = self.loaded
         self.search_t = 0
@@ -41,17 +42,22 @@ class Control_Bar:
         }
         self.s_keys = {pygame.K_MINUS:'_'}
         self.keys_t = {}
+    def setPlaylist(self, playlist: Playlist): self._mainPlaylist = playlist
+    def loop(self):
+        return self._loop
     def run(self, sf:pygame.Surface) -> pygame.Surface:
         sf.fill(self.color)
         w,h = sf.get_size()
         sf.set_alpha(125)
         click = pygame.mouse.get_pressed()[0]
-        v = self.vlc.getState()
+        v = self._app.vlc.getState()
         if v == VLC_Type.playing: img_name = 'pause'
         elif v == VLC_Type.paused: img_name = 'play'
         else: img_name = 'play'
 
-        if not self.loaded and self.old_loaded: pygame.display.set_caption(f'{self.mainMusic.getTitle()} - {self.mainMusic.getAuthor()}')
+        if not self._app: return sf
+
+        if not self.loaded and self.old_loaded: pygame.display.set_caption(f'{self._app.mainMusic.getTitle()} - {self._app.mainMusic.getAuthor()}')
 
         size = self._img[img_name].get_size()
         sf.blit(self._img[img_name], (w/2-size[0]/2,h/2-size[1]/2))
@@ -61,8 +67,8 @@ class Control_Bar:
         if pygame.Rect((0,h-self.play_bar_height,w,self.play_bar_height)).collidepoint(x,y):
             if self.start <= 0: self.start = time.time()
             if time.time() - self.start >= .8:
-                if self._l == None or not (self._l[1] <= self.vlc.getTimeOfPosition(x/w) <= self._l[2]):
-                    self._l = self.lyric.getLyric(self.vlc.getTimeOfPosition(x/w))
+                if self._l == None or not (self._l[1] <= self._app.vlc.getTimeOfPosition(x/w) <= self._l[2]):
+                    self._l = self.lyric.getLyric(self._app.vlc.getTimeOfPosition(x/w))
                 if self._l != None:
                     f = self.font.render(str(self._l[0]),True,(125,80,90))
                     fr = f.get_rect()
@@ -71,26 +77,26 @@ class Control_Bar:
                     if fr.x+fr.w > w-10: fr.x = w-10-fr.w
                     sf.blit(f,fr)
             if click and not self.old:
-                self.vlc.setPosition(x/w)
-                self.lyric.resetNow(self.vlc.getTime())
+                self._app.vlc.setPosition(x/w)
+                self.lyric.resetNow(self._app.vlc.getTime())
 
         elif pygame.Rect((w/2-size[0]/2,h/2-size[1]/2,size[0],size[1])).collidepoint(self.mp[0], self.mp[1]):
             if click and not self.old and not self.loaded:
-                if v == VLC_Type.playing: self.vlc.pause()
+                if v == VLC_Type.playing: self._app.vlc.pause()
                 elif v == VLC_Type.paused:
-                    self.vlc.play()
+                    self._app.vlc.play()
                 else:
-                    self.vlc.setMidea(self.mainMusic.getAudioURL())
-                    self.vlc.play()
-                    self.lyric.resetNow(self.vlc.getTime())
-        elif pygame.Rect((w/2-loop_size[0]/2+100,h/2-loop_size[1]/2,loop_size[0],loop_size[1])).collidepoint(self.mp[0],self.mp[1]):
+                    self._app.vlc.setMidea(self._app.mainMusic.getAudioURL())
+                    self._app.vlc.play()
+                    self.lyric.resetNow(self._app.vlc.getTime())
+        elif pygame.Rect((w/2-loop_size[0]/2+100,h/2-loop_size[1]/2,loop_size[0],loop_size[1])).collidepoint(self.mp[0], self.mp[1]):
             if click and not self.old and not self.loaded:
                 self._loop = not self._loop
 
         if h != self.old_h:
             self.play_bar_height = max(10,int(h/6))
 
-        pygame.draw.rect(sf, (150,150,150),(0,h-self.play_bar_height,w*self.vlc.getPosition(),self.play_bar_height))
+        pygame.draw.rect(sf, (150,150,150),(0,h-self.play_bar_height,w*self._app.vlc.getPosition(),self.play_bar_height))
 
         if pygame.Rect((0,0,30,h)).collidepoint(self.mp[0],self.mp[1]):
             if self.search_t <= 0: self.search_t = time.time()
@@ -123,28 +129,49 @@ class Control_Bar:
                                 self.search_str += key if not shift else self.s_keys[i]
                             elif key != '-1' and key != '-2' and len(self.search_str) < 20: self.search_str += key if not shift else key.upper()
                             elif key == '-1': self.search_str = self.search_str[:-1]
-                            elif key == '-2' and not self.loaded: self._load_func(self.search_str)
+                            elif key == '-2' and not self.loaded:
+                                if not shift:
+                                    self._load_func(self.search_str)
+                                else: self._app.mainPlayList.addMusic(self.search_str)
                     elif self.keys_t.get(i): self.keys_t.pop(i)
         elif not self.loaded:
             for i in [pygame.K_SPACE, pygame.K_LEFT, pygame.K_RIGHT]:
                 if keys[i]:
                     if not self.keys_t.get(i):
-                        if i == pygame.K_SPACE: self.vlc.toggle()
+                        if i == pygame.K_SPACE: self._app.vlc.toggle()
                         elif i in [pygame.K_LEFT, pygame.K_RIGHT]:
                             v = 5 if i == pygame.K_RIGHT else -5
-                            t = int(self.vlc.getLength()*self.vlc.getPosition()+(v*1000))
+                            t = int(self._app.vlc.getLength()*self._app.vlc.getPosition()+(v*1000))
                             if t < 0: t = 0
-                            elif t > self.vlc.getLength(): t = self.vlc.getLength()
-                            self.vlc.setTime(t)
+                            elif t > self._app.vlc.getLength(): t = self._app.vlc.getLength()
+                            self._app.vlc.setTime(t)
                         self.keys_t[i] = True
                 elif self.keys_t.get(i):
                     self.keys_t.pop(i)
         elif self.start > 0: self.start = 0
-        playing = self.vlc.isPlaying()
-        if not playing and self._old_playing and self._loop and self.mainMusic != None:
-            self.vlc.setMidea(self.mainMusic.getAudioURL())
-            self.vlc.play()
-            self.lyric.resetNow(self.vlc.getTime())
+        playing = self._app.vlc.isPlaying()
+        if self._app._next_pop and self._app.mainPlayList and (self._loop or not self._app.mainPlayList.isLast()):
+            music = self._app.mainPlayList.getNextItem(reset=False).getTitle()
+            if self._app._next_pop.getTitle() == '' or music != self._app._next_pop.getTitle():
+                self._app._next_pop.setTitle(self._app.mainPlayList.getNextItem(reset=False).getTitle())
+        if not playing and self._old_playing and self._app.vlc.getState() == VLC_Type.other:
+            if self._app.mainMusic != None and self._app.mainPlayList != None:
+                last = self._app.mainPlayList.isLast()
+                gt = self._app.mainMusic.getTitle()
+                ga = self._app.mainMusic.getAuthor()
+                if last:
+                    if self._loop: self._app.mainMusic =self._app.mainPlayList.getMusic(0)
+                else:
+                    self._app.mainMusic = self._app.mainPlayList.getNextItem()
+                if (last and self._loop) or not last:
+                    gt2 = self._app.mainMusic.getTitle()
+                    ga2 = self._app.mainMusic.getAuthor()
+                    if gt + ga != gt2 + ga2:
+                        if self._musicLoadEnd: threading.Thread(target=self._musicLoadEnd).start()
+                        print('reload')
+                    self._app.vlc.setMidea(self._app.mainMusic.getAudioURL())
+                    self._app.vlc.play()
+                    self.lyric.resetNow(self._app.vlc.getTime())
 
         self.old = click
         self.old_h = h

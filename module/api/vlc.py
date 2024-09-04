@@ -36,6 +36,8 @@ class VLC:
 
     def getVolume(self) -> int:
         return self.player.get_volume()
+    def setVolume(self, volume):
+        return self.player.audio_set_volume(volume) # 100
 
     def getState(self) -> int:
         state = self.player.get_state()

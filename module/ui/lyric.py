@@ -149,9 +149,8 @@ class Lyric:
                         break
                     sf.blit(s,(x_,hv+self.size_p))
                     x_ += w+self.space[0]
-                try: self.heights[index]+=0
-                except:
-                    for i in range(len(self.heights)-1-index): self.heights.append(0)
+                while len(self.heights)-1 < index:
+                    self.heights.append(0)
                 if self.old_size != size or self.heights[index] <= 0 or (not reload and self.reload):
                     self.heights[index] = _h*(h+5) + h+(h/2) -5
                     if (index >= len(self.items)-1 and index2 >= len(_i)) or not render:

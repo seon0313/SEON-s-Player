@@ -1,10 +1,8 @@
-from threading import Thread
-
 import pafy
 import syncedlyrics
 import yt_dlp
 from youtube_transcript_api import YouTubeTranscriptApi
-
+from urllib.request import urlopen
 
 class Music:
     def __init__(self, code, is_playlist=False):
@@ -19,7 +17,17 @@ class Music:
             v.close()
         self.info: dict = info
         self.is_playlist = is_playlist
-
+    def reload(self):
+        self.video = pafy.new(self.codeto(self.video.videoid), ydl_opts={'nocheckcertificate': True})
+        self.ydl_opt = {
+            'format': 'bestaudio',
+            'subtitlesformat': 'srt',
+        }
+        with yt_dlp.YoutubeDL(self.ydl_opt) as v:
+            # print(v.list_subtitles(b.videoid,['ko']))
+            info = v.extract_info(self.video.watchv_url, download=False)
+            v.close()
+        self.info: dict = info
     def codeto(self, code):
         if not 'http' in code: code = 'https://www.youtube.com/watch?v=' + code
         return code
@@ -40,6 +48,10 @@ class Music:
             #print(f'{index+1-minus}st {format} {audio} {url}')
             urls.append({'format': audio, 'type': format, 'url': url})
         audio_url = urls[-1]['url']
+        try: urlopen(audio_url)
+        except:
+            self.reload()
+            return self.getAudioURL()
         return audio_url
 
     def getTitle(self):
