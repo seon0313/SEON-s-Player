@@ -1,4 +1,8 @@
 # SEON's Player
+* /module/f : 폰트 폴더
+* /module/api : API 모듈 폴더
+* /module/ui : UI 모듈 폴더
+* /
 
 ## 목차
 
