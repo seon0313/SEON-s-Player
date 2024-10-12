@@ -35,6 +35,9 @@ Musixmatch등의 API를 사용하기에 Youtube Music, Apple Music, Spotify의 �
 
 위 두 폰트를 결합하여 `SEON-font.ttf`을 제작했습니다.
 폰트의 저작권은 원본을 따라갑니다.
+
+
+
 *페이퍼로지 폰트 업데이트로 추후 일본어 폰트 또한 `페이퍼로지`폰트를 적용할 예정입니다.*
 
 이 프로그램은 Aphache 2.0 License를 적용합니다.
